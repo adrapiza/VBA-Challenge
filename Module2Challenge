@@ -1,0 +1,132 @@
+Sub Module2Challenge()
+ Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim Summary_Table As Worksheet
+    Dim Summary_Table_Row As Long
+    Dim TickerVolumes As Object
+    Dim GreatestIncreaseTicker As String
+    Dim GreatestDecreaseTicker As String
+    Dim GreatestVolumeTicker As String
+    Dim GreatestIncrease As Double
+    Dim GreatestDecrease As Double
+    Dim GreatestVolume As Double
+    
+    Set TickerVolumes = CreateObject("Scripting.Dictionary")
+   
+    For Each ws In ThisWorkbook.Sheets
+      
+        If ws.Name <> "Summary_Table" Then
+            Set Summary_Table = ws
+            Summary_Table_Row = 2
+            
+            
+            If Summary_Table.Range("I1").Value = "" Then
+                Summary_Table.Range("I1").Value = "Ticker"
+                Summary_Table.Range("J1").Value = "Quarterly Change"
+                Summary_Table.Range("K1").Value = "Percentage Change"
+                Summary_Table.Range("L1").Value = "Total Stock Volume"
+                
+                
+                Summary_Table.Range("P1").Value = "Ticker"
+                Summary_Table.Range("Q1").Value = "Value"
+            End If
+            
+    
+            GreatestIncrease = 0
+            GreatestDecrease = 0
+            GreatestVolume = 0
+            
+
+            lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+            
+            Dim Ticker As String
+            Dim OpeningPrice As Double
+            Dim ClosingPrice As Double
+            Dim QuarterlyChange As Double
+            Dim PercentChange As Double
+            Dim TotalStockVolume As Double
+            
+            Dim i As Long
+            For i = 2 To lastRow
+                If ws.Cells(i, 1).Value <> "" Then
+                    If ws.Cells(i, 1).Value <> ws.Cells(i - 1, 1).Value Then
+                        Ticker = ws.Cells(i, 1).Value
+                        OpeningPrice = ws.Cells(i, 3).Value
+                        TickerVolumes(Ticker) = 0 
+                    End If
+            
+                    TickerVolumes(Ticker) = TickerVolumes(Ticker) + ws.Cells(i, 7).Value
+      
+                    If i = lastRow Or ws.Cells(i + 1, 1).Value <> Ticker Then
+                        ClosingPrice = ws.Cells(i, 6).Value
+                        QuarterlyChange = ClosingPrice - OpeningPrice
+                        
+                        TotalStockVolume = TickerVolumes(Ticker)
+                        
+            
+                        If OpeningPrice <> 0 Then
+                            PercentChange = (QuarterlyChange / OpeningPrice) * 100
+                        Else
+                            PercentChange = 0
+                        End If
+                        
+             
+                        Summary_Table.Cells(Summary_Table_Row, 9).Value = Ticker
+                        Summary_Table.Cells(Summary_Table_Row, 10).Value = QuarterlyChange
+                        Summary_Table.Cells(Summary_Table_Row, 11).NumberFormat = "0.00%" 
+                        Summary_Table.Cells(Summary_Table_Row, 11).Value = PercentChange / 100 
+                        Summary_Table.Cells(Summary_Table_Row, 12).NumberFormat = "General" 
+                        Summary_Table.Cells(Summary_Table_Row, 12).Value = TotalStockVolume
+                        
+                    
+                        If QuarterlyChange > 0 Then
+                            Summary_Table.Cells(Summary_Table_Row, 10).Interior.Color = RGB(0, 255, 0) 
+                        ElseIf QuarterlyChange < 0 Then
+                            Summary_Table.Cells(Summary_Table_Row, 10).Interior.Color = RGB(255, 0, 0) 
+                        Else
+                            Summary_Table.Cells(Summary_Table_Row, 10).Interior.ColorIndex = xlNone 
+                        End If
+                        
+          
+                        If PercentChange > GreatestIncrease Then
+                            GreatestIncrease = PercentChange
+                            GreatestIncreaseTicker = Ticker
+                        End If
+                        
+                        If PercentChange < GreatestDecrease Then
+                            GreatestDecrease = PercentChange
+                            GreatestDecreaseTicker = Ticker
+                        End If
+                        
+                        If TotalStockVolume > GreatestVolume Then
+                            GreatestVolume = TotalStockVolume
+                            GreatestVolumeTicker = Ticker
+                        End If
+                        
+                        Summary_Table_Row = Summary_Table_Row + 1
+                    End If
+                End If
+            Next i
+            
+    
+            Summary_Table.Cells(2, 15).Value = "Greatest % Increase"
+            Summary_Table.Cells(2, 16).Value = GreatestIncreaseTicker
+            Summary_Table.Cells(2, 17).NumberFormat = "0.00%" 
+            Summary_Table.Cells(2, 17).Value = GreatestIncrease / 100 
+            
+            Summary_Table.Cells(3, 15).Value = "Greatest % Decrease"
+            Summary_Table.Cells(3, 16).Value = GreatestDecreaseTicker
+            Summary_Table.Cells(3, 17).NumberFormat = "0.00%" 
+            Summary_Table.Cells(3, 17).Value = GreatestDecrease / 100 
+            
+            Summary_Table.Cells(4, 15).Value = "Greatest Total Volume"
+            Summary_Table.Cells(4, 16).Value = GreatestVolumeTicker
+            Summary_Table.Cells(4, 17).Value = GreatestVolume
+            
+      
+            Summary_Table.Cells(4, 9).Value = GreatestVolumeTicker
+            Summary_Table.Cells(4, 12).Value = GreatestVolume
+        End If
+    Next ws
+End Sub
+
